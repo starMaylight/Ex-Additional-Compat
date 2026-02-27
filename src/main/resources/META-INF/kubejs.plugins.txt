@@ -1,0 +1,1 @@
+com.starmaylight.ex_additional_compat.kubejs.ExCompatKubeJSPlugin

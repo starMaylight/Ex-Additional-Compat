@@ -1,0 +1,84 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "${mod_license}"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+authors = "starmaylight"
+description = '''Ex Additional Compat - A bridge mod for modpack development.
+Connects Multiblocked and KubeJS with Draconic Additions, Crossroads MC, Enchanted: Witchcraft, Blood Magic, and Extra Utilities Reborn.'''
+
+# === Mandatory dependencies ===
+[[dependencies."${mod_id}"]]
+modId = "forge"
+mandatory = true
+versionRange = "${forge_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "minecraft"
+mandatory = true
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+# === Optional dependencies (integration targets) ===
+[[dependencies."${mod_id}"]]
+modId = "multiblocked"
+mandatory = false
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "kubejs"
+mandatory = false
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "jei"
+mandatory = false
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+# === Optional dependencies (source mods) ===
+[[dependencies."${mod_id}"]]
+modId = "draconicadditions"
+mandatory = false
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "crossroads"
+mandatory = false
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "enchanted"
+mandatory = false
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "bloodmagic"
+mandatory = false
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "extrautilitiesreborn"
+mandatory = false
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"

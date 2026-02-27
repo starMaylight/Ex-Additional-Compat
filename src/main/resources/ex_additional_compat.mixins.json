@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.starmaylight.ex_additional_compat.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "ex_additional_compat.refmap.json",
+  "plugin": "com.starmaylight.ex_additional_compat.mixin.ExCompatMixinPlugin",
+  "mixins": [
+    "bloodmagic.MixinRitualHelper",
+    "enchanted.MixinRiteTypes",
+    "exutil.MixinEnchanterUpdateTick",
+    "exutil.MixinResonatorUpdateTick",
+    "multiblocked.MixinPredicateAnyCapability",
+    "multiblocked.MixinRecipeTypeAdapter"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
