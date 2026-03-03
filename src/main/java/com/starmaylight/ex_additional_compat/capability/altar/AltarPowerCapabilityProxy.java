@@ -14,10 +14,15 @@ import java.util.List;
  * Proxy for consuming Altar Power from Enchanted: Witchcraft altars.
  * INPUT ONLY - this proxy does not support power output.
  *
- * The proxy checks if the connected block entity is an IPowerProvider (altar)
- * and calls tryConsumePower() to consume power for recipe processing.
+ * Two access modes:
+ * 1. Direct: getTileEntity() is an IPowerProvider (real Enchanted altar adjacent)
+ * 2. Trait buffer: AltarPowerCapabilityTrait internal storage (auto-imported from nearby altars)
+ *
+ * The proxy tries direct access first, then falls back to trait buffer.
  */
 public class AltarPowerCapabilityProxy extends CapabilityProxy<Double> {
+
+    private double lastPower = -1;
 
     public AltarPowerCapabilityProxy(BlockEntity blockEntity) {
         super(AltarPowerMultiblockCapability.CAP, blockEntity);
@@ -33,18 +38,28 @@ public class AltarPowerCapabilityProxy extends CapabilityProxy<Double> {
         BlockEntity be = getTileEntity();
         if (be == null) return left;
 
-        if (!(be instanceof IPowerProvider provider)) return left;
+        // Try direct access to real Enchanted altar
+        if (be instanceof IPowerProvider provider) {
+            return handleWithProvider(provider, left, simulate);
+        }
 
+        // Fallback: use trait internal buffer
+        AltarPowerCapabilityTrait trait = AltarPowerCapabilityTrait.getTraitFor(be);
+        if (trait != null) {
+            return handleWithTrait(trait, left, simulate);
+        }
+
+        return left;
+    }
+
+    private List<Double> handleWithProvider(IPowerProvider provider, List<Double> left, boolean simulate) {
         List<Double> remaining = new ArrayList<>();
-
         for (Double required : left) {
             if (required == null || required <= 0) continue;
 
             if (simulate) {
-                // For simulation, we can't truly check without consuming
                 // IPowerProvider only has tryConsumePower which actually consumes
-                // We assume it's available for simulation purposes
-                // This is a limitation of the Enchanted API
+                // Assume available for simulation
                 continue;
             }
 
@@ -53,15 +68,50 @@ public class AltarPowerCapabilityProxy extends CapabilityProxy<Double> {
                 remaining.add(required);
             }
         }
+        return remaining.isEmpty() ? null : remaining;
+    }
 
+    private List<Double> handleWithTrait(AltarPowerCapabilityTrait trait, List<Double> left, boolean simulate) {
+        List<Double> remaining = new ArrayList<>();
+        for (Double required : left) {
+            if (required == null || required <= 0) continue;
+
+            if (simulate) {
+                // Check if trait has enough power for simulation
+                if (trait.getCurrentPower() < required) {
+                    remaining.add(required);
+                }
+                continue;
+            }
+
+            boolean success = trait.tryConsumePower(required);
+            if (!success) {
+                remaining.add(required);
+            }
+        }
         return remaining.isEmpty() ? null : remaining;
     }
 
     @Override
     protected boolean hasInnerChanged() {
-        // IPowerProvider doesn't expose current power level via API
-        // Always return true so the recipe system retries each tick
-        // (altar recharges over time, so state changes frequently)
-        return true;
+        BlockEntity be = getTileEntity();
+        if (be == null) return false;
+
+        // IPowerProvider doesn't expose current power level
+        // When using provider directly, always return true
+        if (be instanceof IPowerProvider) {
+            return true;
+        }
+
+        // When using trait buffer, check if power changed
+        AltarPowerCapabilityTrait trait = AltarPowerCapabilityTrait.getTraitFor(be);
+        if (trait != null) {
+            double current = trait.getCurrentPower();
+            if (Math.abs(current - lastPower) > 0.01) {
+                lastPower = current;
+                return true;
+            }
+        }
+        return false;
     }
 }

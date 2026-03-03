@@ -13,13 +13,11 @@ import java.util.List;
 /**
  * Proxy for handling Chaos energy I/O between Multiblocked machines and DraconicAdditions blocks.
  *
- * Directly accesses TileChaosHolderBase.chaos ManagedInt field:
- * - chaos.get() - current chaos amount
- * - chaos.add(int) - add chaos
- * - chaos.subtract(int) - remove chaos
+ * Two access modes:
+ * 1. Direct: getTileEntity() is a TileChaosHolderBase (real DA block adjacent)
+ * 2. Trait buffer: ChaosCapabilityTrait internal storage (auto-imported from adjacent chaos holders)
  *
- * IN: Extract chaos from adjacent TileChaosHolderBase
- * OUT: Insert chaos into adjacent TileChaosHolderBase
+ * The proxy tries direct access first, then falls back to trait buffer.
  */
 public class ChaosCapabilityProxy extends CapabilityProxy<Integer> {
 
@@ -35,40 +33,72 @@ public class ChaosCapabilityProxy extends CapabilityProxy<Integer> {
                                                boolean simulate) {
         BlockEntity be = getTileEntity();
         if (be == null) return left;
-        if (!(be instanceof TileChaosHolderBase chaosHolder)) return left;
 
+        // Try direct access to real DraconicAdditions chaos holder
+        if (be instanceof TileChaosHolderBase chaosHolder) {
+            return handleWithChaosHolder(io, chaosHolder, left, simulate);
+        }
+
+        // Fallback: use trait internal buffer
+        ChaosCapabilityTrait trait = ChaosCapabilityTrait.getTraitFor(be);
+        if (trait != null) {
+            return handleWithTrait(io, trait, left, simulate);
+        }
+
+        return left;
+    }
+
+    private List<Integer> handleWithChaosHolder(IO io, TileChaosHolderBase chaosHolder,
+                                                 List<Integer> left, boolean simulate) {
         List<Integer> remaining = new ArrayList<>();
-
         for (Integer required : left) {
             if (required == null || required <= 0) continue;
 
             if (io == IO.IN) {
-                // Extract chaos from the DraconicAdditions block
                 int available = chaosHolder.chaos.get();
                 int extractable = Math.min(required, available);
                 if (!simulate && extractable > 0) {
                     chaosHolder.chaos.subtract(extractable);
                 }
                 int leftover = required - extractable;
-                if (leftover > 0) {
-                    remaining.add(leftover);
-                }
+                if (leftover > 0) remaining.add(leftover);
             } else if (io == IO.OUT) {
-                // Insert chaos into the DraconicAdditions block
-                int currentChaos = chaosHolder.chaos.get();
-                int maxChaos = chaosHolder.getMaxChaos();
-                int space = maxChaos - currentChaos;
+                int space = chaosHolder.getMaxChaos() - chaosHolder.chaos.get();
                 int insertable = Math.min(required, space);
                 if (!simulate && insertable > 0) {
                     chaosHolder.chaos.add(insertable);
                 }
                 int leftover = required - insertable;
-                if (leftover > 0) {
-                    remaining.add(leftover);
-                }
+                if (leftover > 0) remaining.add(leftover);
             }
         }
+        return remaining.isEmpty() ? null : remaining;
+    }
 
+    private List<Integer> handleWithTrait(IO io, ChaosCapabilityTrait trait,
+                                           List<Integer> left, boolean simulate) {
+        List<Integer> remaining = new ArrayList<>();
+        for (Integer required : left) {
+            if (required == null || required <= 0) continue;
+
+            if (io == IO.IN) {
+                int available = trait.getChaos();
+                int extractable = Math.min(required, available);
+                if (!simulate && extractable > 0) {
+                    trait.subtractChaos(extractable);
+                }
+                int leftover = required - extractable;
+                if (leftover > 0) remaining.add(leftover);
+            } else if (io == IO.OUT) {
+                int space = trait.getMaxChaos() - trait.getChaos();
+                int insertable = Math.min(required, space);
+                if (!simulate && insertable > 0) {
+                    trait.addChaos(insertable);
+                }
+                int leftover = required - insertable;
+                if (leftover > 0) remaining.add(leftover);
+            }
+        }
         return remaining.isEmpty() ? null : remaining;
     }
 
@@ -76,9 +106,18 @@ public class ChaosCapabilityProxy extends CapabilityProxy<Integer> {
     protected boolean hasInnerChanged() {
         BlockEntity be = getTileEntity();
         if (be == null) return false;
-        if (!(be instanceof TileChaosHolderBase chaosHolder)) return false;
 
-        int currentChaos = chaosHolder.chaos.get();
+        int currentChaos = -1;
+
+        if (be instanceof TileChaosHolderBase chaosHolder) {
+            currentChaos = chaosHolder.chaos.get();
+        } else {
+            ChaosCapabilityTrait trait = ChaosCapabilityTrait.getTraitFor(be);
+            if (trait != null) {
+                currentChaos = trait.getChaos();
+            }
+        }
+
         if (currentChaos != lastChaos) {
             lastChaos = currentChaos;
             return true;
