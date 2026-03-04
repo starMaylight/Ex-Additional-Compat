@@ -10,6 +10,7 @@
     "enchanted.MixinRiteTypes",
     "exutil.MixinEnchanterUpdateTick",
     "exutil.MixinResonatorUpdateTick",
+    "multiblocked.MixinComponentUse",
     "multiblocked.MixinPredicateAnyCapability",
     "multiblocked.MixinRecipeTypeAdapter"
   ],

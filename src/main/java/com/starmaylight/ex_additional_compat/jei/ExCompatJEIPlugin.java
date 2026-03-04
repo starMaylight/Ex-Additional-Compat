@@ -6,6 +6,10 @@ import com.starmaylight.ex_additional_compat.jei.arthana.ArthanaDropCategory;
 import com.starmaylight.ex_additional_compat.jei.arthana.ArthanaDropRecipeLoader;
 import com.starmaylight.ex_additional_compat.jei.exutil.EnchanterCategory;
 import com.starmaylight.ex_additional_compat.jei.exutil.ResonatorCategory;
+import com.starmaylight.ex_additional_compat.jei.embryo.EmbryoMorphCategory;
+import com.starmaylight.ex_additional_compat.jei.embryo.EmbryoMorphRecipeLoader;
+import com.starmaylight.ex_additional_compat.jei.rite.RiteCategory;
+import com.starmaylight.ex_additional_compat.jei.rite.RiteRecipeLoader;
 import com.starmaylight.ex_additional_compat.recipe.ExUtilRecipeRegistry;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
@@ -23,6 +27,8 @@ import org.slf4j.Logger;
  *
  * Registers:
  * - Arthana Drop category (Enchanted mod: entity drops when killed with Arthana)
+ * - Enchanted Rite category (Enchanted mod: custom ritual requirements via KubeJS)
+ * - Embryo Lab Morph category (Crossroads MC: embryo lab entity morphing recipes)
  * - Enchanter category (Extra Utilities Reborn: enchanting machine recipes)
  * - Resonator category (Extra Utilities Reborn: resonating machine recipes)
  *
@@ -47,7 +53,13 @@ public class ExCompatJEIPlugin implements IModPlugin {
 
         if (ModLoadedHelper.isEnchantedLoaded()) {
             registration.addRecipeCategories(new ArthanaDropCategory(guiHelper));
-            LOGGER.info("ExCompatJEI: Registered Arthana Drop category");
+            registration.addRecipeCategories(new RiteCategory(guiHelper));
+            LOGGER.info("ExCompatJEI: Registered Arthana Drop and Enchanted Rite categories");
+        }
+
+        if (ModLoadedHelper.isCrossroadsLoaded()) {
+            registration.addRecipeCategories(new EmbryoMorphCategory(guiHelper));
+            LOGGER.info("ExCompatJEI: Registered Embryo Lab Morph category");
         }
 
         if (ModLoadedHelper.isExtraUtilLoaded()) {
@@ -66,6 +78,25 @@ public class ExCompatJEIPlugin implements IModPlugin {
                 LOGGER.info("ExCompatJEI: Registered {} Arthana drop recipes", recipes.size());
             } catch (Exception e) {
                 LOGGER.error("ExCompatJEI: Failed to load Arthana drop recipes", e);
+            }
+
+            try {
+                var riteRecipes = RiteRecipeLoader.loadRecipes();
+                registration.addRecipes(RiteCategory.RECIPE_TYPE, riteRecipes);
+                LOGGER.info("ExCompatJEI: Registered {} custom rite recipes", riteRecipes.size());
+            } catch (Exception e) {
+                LOGGER.error("ExCompatJEI: Failed to load custom rite recipes", e);
+            }
+        }
+
+        if (ModLoadedHelper.isCrossroadsLoaded()) {
+            try {
+                var embryoRecipes = EmbryoMorphRecipeLoader.loadRecipes();
+                registration.addRecipes(EmbryoMorphCategory.RECIPE_TYPE, embryoRecipes);
+                LOGGER.info("ExCompatJEI: Registered {} embryo lab morph recipes",
+                        embryoRecipes.size());
+            } catch (Exception e) {
+                LOGGER.error("ExCompatJEI: Failed to load embryo lab morph recipes", e);
             }
         }
 
@@ -92,6 +123,23 @@ public class ExCompatJEIPlugin implements IModPlugin {
             ItemStack arthana = getItemStack("enchanted", "arthana");
             if (!arthana.isEmpty()) {
                 registration.addRecipeCatalyst(arthana, ArthanaDropCategory.RECIPE_TYPE);
+            }
+
+            // Register chalk_gold as catalyst for Enchanted Rite category
+            ItemStack chalk = getItemStack("enchanted", "chalk_gold");
+            if (chalk.isEmpty()) {
+                chalk = getItemStack("enchanted", "chalk_white");
+            }
+            if (!chalk.isEmpty()) {
+                registration.addRecipeCatalyst(chalk, RiteCategory.RECIPE_TYPE);
+            }
+        }
+
+        if (ModLoadedHelper.isCrossroadsLoaded()) {
+            // Register Embryo Lab block as catalyst for Embryo Morph category
+            ItemStack embryoLab = getItemStack("crossroads", "embryo_lab");
+            if (!embryoLab.isEmpty()) {
+                registration.addRecipeCatalyst(embryoLab, EmbryoMorphCategory.RECIPE_TYPE);
             }
         }
 

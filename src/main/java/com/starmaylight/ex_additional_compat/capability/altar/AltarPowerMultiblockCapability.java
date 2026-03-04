@@ -10,7 +10,9 @@ import com.lowdragmc.multiblocked.api.capability.trait.CapabilityTrait;
 import com.lowdragmc.multiblocked.api.gui.recipe.ContentWidget;
 import com.lowdragmc.multiblocked.api.recipe.ContentModifier;
 import com.lowdragmc.multiblocked.api.recipe.serde.content.IContentSerializer;
+import com.lowdragmc.multiblocked.api.tile.ComponentTileEntity;
 import com.favouriteless.enchanted.api.power.IPowerProvider;
+import com.google.gson.JsonObject;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -47,7 +49,14 @@ public class AltarPowerMultiblockCapability extends MultiblockCapability<Double>
     @Override
     public boolean isBlockHasCapability(@Nonnull IO io, @Nonnull BlockEntity blockEntity) {
         if (io == IO.OUT) return false;
-        return blockEntity instanceof IPowerProvider;
+        // Direct: native Enchanted altar power provider
+        if (blockEntity instanceof IPowerProvider) return true;
+        // Trait-based: Multiblocked component with altar trait configured
+        if (blockEntity instanceof ComponentTileEntity<?> component) {
+            JsonObject traits = component.getDefinition().traits;
+            return traits != null && traits.has("enchanted_altar");
+        }
+        return false;
     }
 
     @Override

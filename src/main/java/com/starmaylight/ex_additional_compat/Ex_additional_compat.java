@@ -16,19 +16,13 @@ public class Ex_additional_compat {
     public Ex_additional_compat() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         MinecraftForge.EVENT_BUS.register(this);
-
-        // Note: Enchanted rite registration is handled by EnchantedRiteRegistry
-        // via @Mod.EventBusSubscriber + RegistryEvent.Register (automatic)
-
         LOGGER.info("Ex Additional Compat initializing...");
     }
 
     private void setup(final FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> {
-            if (ModLoadedHelper.isMultiblockedLoaded()) {
-                registerMultiblockedCapabilities();
-            }
-        });
+        if (ModLoadedHelper.isMultiblockedLoaded()) {
+            event.enqueueWork(this::registerMultiblockedCapabilities);
+        }
 
         LOGGER.info("Ex Additional Compat setup complete.");
         logLoadedMods();

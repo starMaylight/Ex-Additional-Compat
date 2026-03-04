@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,6 +61,9 @@ public class EnchantedRiteRegistry {
     /** Registered RiteType instances for iteration by the mixin */
     private static final List<RiteType<?>> REGISTERED_RITES = new ArrayList<>();
 
+    /** Builder data for each registered rite, keyed by ResourceLocation. Used for JEI display. */
+    private static final Map<ResourceLocation, RiteBuilderJS> REGISTERED_BUILDERS = new LinkedHashMap<>();
+
     /**
      * Called when Forge fires the RegistryEvent.Register for RiteType.
      * At this point KubeJS startup scripts have already been loaded.
@@ -95,6 +99,7 @@ public class EnchantedRiteRegistry {
                 riteType.setRegistryName(id);
                 registry.register(riteType);
                 REGISTERED_RITES.add(riteType);
+                REGISTERED_BUILDERS.put(id, builder);
 
                 LOGGER.info("[ExCompat Rite] Registered custom rite: {} (power={}, powerTick={})",
                         id, builder.getPower(), builder.getPowerTick());
@@ -113,5 +118,14 @@ public class EnchantedRiteRegistry {
      */
     public static List<RiteType<?>> getRegisteredRites() {
         return Collections.unmodifiableList(REGISTERED_RITES);
+    }
+
+    /**
+     * Get all registered builder data for JEI display.
+     * Keyed by the rite's ResourceLocation, value is the original RiteBuilderJS
+     * containing power, circle, item, and entity requirements.
+     */
+    public static Map<ResourceLocation, RiteBuilderJS> getRegisteredBuilders() {
+        return Collections.unmodifiableMap(REGISTERED_BUILDERS);
     }
 }
