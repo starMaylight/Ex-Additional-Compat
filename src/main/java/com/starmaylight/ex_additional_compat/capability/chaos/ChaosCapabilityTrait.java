@@ -2,11 +2,15 @@ package com.starmaylight.ex_additional_compat.capability.chaos;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.multiblocked.api.capability.trait.SingleCapabilityTrait;
+import com.lowdragmc.multiblocked.api.tile.ComponentTileEntity;
 import net.foxmcloud.draconicadditions.blocks.tileentity.TileChaosHolderBase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import javax.annotation.Nullable;
@@ -43,15 +47,21 @@ public class ChaosCapabilityTrait extends SingleCapabilityTrait {
     public int getMaxChaos() { return maxChaos; }
 
     public void addChaos(int amount) {
+        int old = chaos;
         chaos = Math.max(0, Math.min(maxChaos, chaos + amount));
+        if (chaos != old) markAsDirty();
     }
 
     public void subtractChaos(int amount) {
+        int old = chaos;
         chaos = Math.max(0, chaos - amount);
+        if (chaos != old) markAsDirty();
     }
 
     public void setChaos(int amount) {
+        int old = chaos;
         chaos = Math.max(0, Math.min(maxChaos, amount));
+        if (chaos != old) markAsDirty();
     }
 
     // --- Serialization ---
@@ -88,7 +98,20 @@ public class ChaosCapabilityTrait extends SingleCapabilityTrait {
         compound.putInt("chaos_amount", chaos);
     }
 
+    // --- GUI: show current chaos amount ---
+
+    @Override
+    public void createUI(ComponentTileEntity<?> comp, WidgetGroup group, Player player) {
+        super.createUI(comp, group, player);
+        group.addWidget(new LabelWidget(x, y,
+                () -> "Chaos: " + this.getChaos() + " / " + this.getMaxChaos())
+                .setTextColor(0xFF6600FF).setDropShadow(true));
+    }
+
     // --- Auto-import from adjacent TileChaosHolderBase blocks ---
+
+    @Override
+    public boolean hasUpdate() { return true; }
 
     @Override
     public void update() {
@@ -105,7 +128,7 @@ public class ChaosCapabilityTrait extends SingleCapabilityTrait {
                 int transfer = Math.min(available, space);
                 if (transfer > 0) {
                     chaosHolder.chaos.subtract(transfer);
-                    chaos += transfer;
+                    addChaos(transfer); // Use addChaos() for consistency and proper markAsDirty()
                     if (chaos >= maxChaos) break;
                 }
             }

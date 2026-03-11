@@ -10,6 +10,8 @@ import com.lowdragmc.multiblocked.api.capability.trait.CapabilityTrait;
 import com.lowdragmc.multiblocked.api.gui.recipe.ContentWidget;
 import com.lowdragmc.multiblocked.api.recipe.ContentModifier;
 import com.lowdragmc.multiblocked.api.recipe.serde.content.IContentSerializer;
+import com.lowdragmc.multiblocked.api.tile.ComponentTileEntity;
+import com.starmaylight.ex_additional_compat.capability.TraitIOHelper;
 import com.Da_Technomancer.crossroads.API.Capabilities;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -46,6 +48,9 @@ public class RotaryMultiblockCapability extends MultiblockCapability<Double> {
 
     @Override
     public boolean isBlockHasCapability(@Nonnull IO io, @Nonnull BlockEntity blockEntity) {
+        if (blockEntity instanceof ComponentTileEntity<?> comp) {
+            return TraitIOHelper.isTraitIOCompatible(io, comp, "crossroads_rotary");
+        }
         return blockEntity.getCapability(Capabilities.AXLE_CAPABILITY).isPresent();
     }
 

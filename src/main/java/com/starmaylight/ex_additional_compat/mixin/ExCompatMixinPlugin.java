@@ -53,11 +53,11 @@ public class ExCompatMixinPlugin implements IMixinConfigPlugin {
             return result;
         }
 
-        // Enchanted mixins: only apply if Enchanted is present
-        if (mixinClassName.contains(".enchanted.")) {
-            result = isClassPresent(
-                    "com.favouriteless.enchanted.common.init.registry.RiteTypes");
-            LOGGER.info("[ExCompat MixinPlugin] shouldApplyMixin: {} -> target={} -> enchanted present={}",
+        // FluxLink mixin: requires BOTH Multiblocked AND Crossroads
+        if (mixinClassName.contains("MixinComponentFluxLink")) {
+            result = isClassPresent("com.lowdragmc.multiblocked.api.capability.MultiblockCapability")
+                    && isClassPresent("com.Da_Technomancer.crossroads.API.technomancy.IFluxLink");
+            LOGGER.info("[ExCompat MixinPlugin] shouldApplyMixin: {} -> target={} -> multiblocked+crossroads present={}",
                     mixinClassName, targetClassName, result);
             return result;
         }

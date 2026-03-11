@@ -1,0 +1,14 @@
+{
+  "mappings": {
+    "com/starmaylight/ex_additional_compat/mixin/multiblocked/MixinComponentTileEntity": {
+      "setLevel": "Lcom/lowdragmc/multiblocked/api/tile/ComponentTileEntity;m_142339_(Lnet/minecraft/world/level/Level;)V"
+    }
+  },
+  "data": {
+    "searge": {
+      "com/starmaylight/ex_additional_compat/mixin/multiblocked/MixinComponentTileEntity": {
+        "setLevel": "Lcom/lowdragmc/multiblocked/api/tile/ComponentTileEntity;m_142339_(Lnet/minecraft/world/level/Level;)V"
+      }
+    }
+  }
+}

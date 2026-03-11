@@ -58,16 +58,16 @@ public class BeamCapabilityProxy extends CapabilityProxy<int[]> {
             int reqStability = beamValues[2];
             int reqVoid = beamValues[3];
 
-            // Check if the received beam meets all component requirements
-            int totalRequired = reqEnergy + reqPotential + reqStability + reqVoid;
-            int totalReceived = receivedBeam.getEnergy() + receivedBeam.getPotential()
-                              + receivedBeam.getStability() + receivedBeam.getVoid();
-
-            if (totalReceived >= totalRequired) {
-                // Beam is strong enough - recipe can progress this tick
+            // Check if the received beam meets EACH component requirement individually
+            // (not just total - E:50 P:0 S:0 V:0 must not match E:0 P:10 S:40 V:0)
+            if (receivedBeam.getEnergy() >= reqEnergy
+                    && receivedBeam.getPotential() >= reqPotential
+                    && receivedBeam.getStability() >= reqStability
+                    && receivedBeam.getVoid() >= reqVoid) {
+                // All beam components meet requirements - recipe can progress this tick
                 // Don't consume the beam (it's a continuous stream)
             } else {
-                // Not enough beam power
+                // One or more beam components insufficient
                 remaining.add(beamValues);
             }
         }

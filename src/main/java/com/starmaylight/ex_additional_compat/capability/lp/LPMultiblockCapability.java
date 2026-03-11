@@ -10,6 +10,8 @@ import com.lowdragmc.multiblocked.api.capability.trait.CapabilityTrait;
 import com.lowdragmc.multiblocked.api.gui.recipe.ContentWidget;
 import com.lowdragmc.multiblocked.api.recipe.ContentModifier;
 import com.lowdragmc.multiblocked.api.recipe.serde.content.IContentSerializer;
+import com.lowdragmc.multiblocked.api.tile.ComponentTileEntity;
+import com.starmaylight.ex_additional_compat.capability.TraitIOHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -44,7 +46,11 @@ public class LPMultiblockCapability extends MultiblockCapability<Integer> {
 
     @Override
     public boolean isBlockHasCapability(@Nonnull IO io, @Nonnull BlockEntity blockEntity) {
-        return true;
+        // Trait-based: check trait exists AND mbdIO direction is compatible
+        if (blockEntity instanceof ComponentTileEntity<?> comp) {
+            return TraitIOHelper.isTraitIOCompatible(io, comp, "bloodmagic_lp");
+        }
+        return true; // LP uses Soul Network, any non-MBD block can serve
     }
 
     @Override

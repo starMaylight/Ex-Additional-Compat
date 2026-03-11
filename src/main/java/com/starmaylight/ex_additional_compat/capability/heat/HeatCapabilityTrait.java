@@ -27,12 +27,16 @@ public class HeatCapabilityTrait extends SingleCapabilityTrait {
         public double getTemp() { return temperature; }
 
         @Override
-        public void setTemp(double tempIn) { temperature = Math.max(-273.0, tempIn); }
+        public void setTemp(double tempIn) {
+            temperature = Math.max(-273.0, tempIn);
+            HeatCapabilityTrait.this.markAsDirty();
+        }
 
         @Override
         public void addHeat(double heat) {
             temperature = Math.max(-273.0, temperature + heat);
             if (temperature > maxTemperature) temperature = maxTemperature;
+            HeatCapabilityTrait.this.markAsDirty();
         }
     });
 
@@ -81,11 +85,6 @@ public class HeatCapabilityTrait extends SingleCapabilityTrait {
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
         if (capability == Capabilities.HEAT_CAPABILITY) return heatHandlerOpt.cast();
         return super.getCapability(capability, facing);
-    }
-
-    @Override
-    public void update() {
-        super.update();
     }
 
     @Override

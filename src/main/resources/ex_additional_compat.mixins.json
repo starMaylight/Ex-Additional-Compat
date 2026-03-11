@@ -7,10 +7,12 @@
   "plugin": "com.starmaylight.ex_additional_compat.mixin.ExCompatMixinPlugin",
   "mixins": [
     "bloodmagic.MixinRitualHelper",
-    "enchanted.MixinRiteTypes",
     "exutil.MixinEnchanterUpdateTick",
     "exutil.MixinResonatorUpdateTick",
+    "multiblocked.MixinComponentFluxLink",
+    "multiblocked.MixinComponentTileEntity",
     "multiblocked.MixinComponentUse",
+    "multiblocked.MixinMbdCapabilities",
     "multiblocked.MixinPredicateAnyCapability",
     "multiblocked.MixinRecipeTypeAdapter"
   ],

@@ -50,6 +50,7 @@ public class AltarPowerCapabilityTrait extends SingleCapabilityTrait {
     public boolean tryConsumePower(double amount) {
         if (currentPower >= amount) {
             currentPower -= amount;
+            markAsDirty();
             return true;
         }
         return false;
@@ -59,7 +60,9 @@ public class AltarPowerCapabilityTrait extends SingleCapabilityTrait {
      * Add power to the internal buffer (from altar import).
      */
     public void addPower(double amount) {
+        double old = currentPower;
         currentPower = Math.min(maxPower, currentPower + amount);
+        if (currentPower != old) markAsDirty();
     }
 
     // --- Serialization ---
@@ -104,6 +107,9 @@ public class AltarPowerCapabilityTrait extends SingleCapabilityTrait {
     // --- Auto-import from nearby IPowerProvider (altar) blocks ---
 
     @Override
+    public boolean hasUpdate() { return true; }
+
+    @Override
     public void update() {
         super.update();
         if (component == null || component.getLevel() == null || component.getLevel().isClientSide()) return;
@@ -126,6 +132,7 @@ public class AltarPowerCapabilityTrait extends SingleCapabilityTrait {
             if (be instanceof IPowerProvider provider) {
                 if (provider.tryConsumePower(importAmount)) {
                     currentPower += importAmount;
+                    markAsDirty();
                     break; // Successfully imported from one altar
                 }
             }

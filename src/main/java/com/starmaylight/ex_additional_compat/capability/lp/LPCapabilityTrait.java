@@ -1,8 +1,12 @@
 package com.starmaylight.ex_additional_compat.capability.lp;
 
+import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.multiblocked.api.capability.trait.SingleCapabilityTrait;
+import com.lowdragmc.multiblocked.api.tile.ComponentTileEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.items.ItemStackHandler;
@@ -29,6 +33,11 @@ public class LPCapabilityTrait extends SingleCapabilityTrait {
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
             return stack.getItem().getClass().getSimpleName().contains("BloodOrb");
+        }
+        @Override
+        protected void onContentsChanged(int slot) {
+            super.onContentsChanged(slot);
+            LPCapabilityTrait.this.markAsDirty();
         }
     };
 
@@ -101,6 +110,14 @@ public class LPCapabilityTrait extends SingleCapabilityTrait {
     public void writeToNBT(CompoundTag compound) {
         super.writeToNBT(compound);
         compound.put("orb_slot", orbSlot.serializeNBT());
+    }
+
+    // --- GUI: Blood Orb slot visible to players ---
+
+    @Override
+    public void createUI(ComponentTileEntity<?> comp, WidgetGroup group, Player player) {
+        super.createUI(comp, group, player);
+        group.addWidget(new SlotWidget(orbSlot, 0, x, y, true, true));
     }
 
     public ItemStackHandler getOrbSlot() { return orbSlot; }

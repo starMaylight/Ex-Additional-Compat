@@ -27,8 +27,9 @@ import java.util.Map;
  * This happens at RegistryEvent time, which is AFTER KubeJS startup scripts have loaded,
  * solving the timing issue with DeferredRegister (which requires entries at mod constructor time).
  *
- * Note: RiteTypes.getRiteAt() only checks Enchanted's own DeferredRegister entries.
- * A mixin (MixinRiteTypes) extends getRiteAt() to also check our entries.
+ * Rite activation is handled by RiteActivationHandler, which intercepts Gold Chalk
+ * right-clicks via PlayerInteractEvent and checks our registered rites.
+ * This avoids mixin into Enchanted's internal RiteTypes class.
  */
 /**
  *
@@ -113,8 +114,8 @@ public class EnchantedRiteRegistry {
     }
 
     /**
-     * Get all registered rite instances. Used by the MixinRiteTypes to include
-     * our rites in the getRiteAt() scan.
+     * Get all registered rite instances. Used by RiteActivationHandler to
+     * check for matching custom rites when Gold Chalk is clicked.
      */
     public static List<RiteType<?>> getRegisteredRites() {
         return Collections.unmodifiableList(REGISTERED_RITES);

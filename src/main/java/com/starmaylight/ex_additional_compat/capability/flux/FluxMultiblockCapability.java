@@ -11,8 +11,8 @@ import com.lowdragmc.multiblocked.api.gui.recipe.ContentWidget;
 import com.lowdragmc.multiblocked.api.recipe.ContentModifier;
 import com.lowdragmc.multiblocked.api.recipe.serde.content.IContentSerializer;
 import com.lowdragmc.multiblocked.api.tile.ComponentTileEntity;
+import com.starmaylight.ex_additional_compat.capability.TraitIOHelper;
 import com.Da_Technomancer.crossroads.API.technomancy.IFluxLink;
-import com.google.gson.JsonObject;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -49,10 +49,9 @@ public class FluxMultiblockCapability extends MultiblockCapability<Integer> {
     public boolean isBlockHasCapability(@Nonnull IO io, @Nonnull BlockEntity blockEntity) {
         // Direct: native Crossroads IFluxLink block
         if (blockEntity instanceof IFluxLink) return true;
-        // Trait-based: Multiblocked component with flux trait configured
-        if (blockEntity instanceof ComponentTileEntity<?> component) {
-            JsonObject traits = component.getDefinition().traits;
-            return traits != null && traits.has("crossroads_flux");
+        // Trait-based: check trait exists AND mbdIO direction is compatible
+        if (blockEntity instanceof ComponentTileEntity<?> comp) {
+            return TraitIOHelper.isTraitIOCompatible(io, comp, "crossroads_flux");
         }
         return false;
     }

@@ -11,7 +11,7 @@ import com.lowdragmc.multiblocked.api.gui.recipe.ContentWidget;
 import com.lowdragmc.multiblocked.api.recipe.ContentModifier;
 import com.lowdragmc.multiblocked.api.recipe.serde.content.IContentSerializer;
 import com.lowdragmc.multiblocked.api.tile.ComponentTileEntity;
-import com.google.gson.JsonObject;
+import com.starmaylight.ex_additional_compat.capability.TraitIOHelper;
 import net.foxmcloud.draconicadditions.blocks.tileentity.TileChaosHolderBase;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -49,10 +49,9 @@ public class ChaosMultiblockCapability extends MultiblockCapability<Integer> {
     public boolean isBlockHasCapability(@Nonnull IO io, @Nonnull BlockEntity blockEntity) {
         // Direct: native Draconic Additions chaos holder block
         if (blockEntity instanceof TileChaosHolderBase) return true;
-        // Trait-based: Multiblocked component with chaos trait configured
-        if (blockEntity instanceof ComponentTileEntity<?> component) {
-            JsonObject traits = component.getDefinition().traits;
-            return traits != null && traits.has("draconic_chaos");
+        // Trait-based: check trait exists AND mbdIO direction is compatible
+        if (blockEntity instanceof ComponentTileEntity<?> comp) {
+            return TraitIOHelper.isTraitIOCompatible(io, comp, "draconic_chaos");
         }
         return false;
     }

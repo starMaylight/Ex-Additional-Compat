@@ -13,28 +13,30 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Mixin to prevent Multiblocked's controller/component UI from intercepting
- * right-click interactions with Crossroads/Essentials' Linking Tool.
+ * right-click interactions with mod-specific tools and items.
  *
- * Without this mixin, right-clicking a Multiblocked block with a Linking Tool
- * opens the Multiblocked GUI instead of initiating the linking process,
+ * Without this mixin, right-clicking a Multiblocked block with these items
+ * opens the Multiblocked GUI instead of processing the tool interaction,
  * because ComponentTileEntity.use() returns SUCCESS before the tool can process.
  *
- * This mixin injects at HEAD and returns PASS for known linking/interaction
- * tools from Crossroads and Essentials, allowing them to function normally.
+ * Handled interactions:
+ * - Essentials LinkingTool: Delegates to FluxInteractionHelper for ILinkTE linking
+ * - Crossroads BeamCage: Returns PASS to allow item processing
+ * - DraconicAdditions ChaosContainer: Delegates to ChaosInteractionHelper for chaos transfer
  */
 @Mixin(value = ComponentTileEntity.class, remap = false)
 public abstract class MixinComponentUse {
 
     /**
-     * Known tool class names that should bypass Multiblocked's UI interaction.
-     * Checked by class name string to avoid hard dependency on optional mods.
+     * Known tool class names that should simply bypass Multiblocked's UI (PASS).
      */
     private static final String[] PASSTHROUGH_TOOL_CLASSES = {
-        // Essentials: Linking Tool for copper wire flux networks
-        "com.Da_Technomancer.essentials.items.LinkingTool",
-        // Crossroads: various interaction tools that need block access
         "com.Da_Technomancer.crossroads.items.technomancy.BeamCage",
     };
+
+    // Tool class names that need special delegation handling
+    private static final String LINKING_TOOL_CLASS = "com.Da_Technomancer.essentials.items.LinkingTool";
+    private static final String CHAOS_CONTAINER_CLASS = "net.foxmcloud.draconicadditions.items.tools.ChaosContainer";
 
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     private void excompat$allowCrossroadsTools(
@@ -45,12 +47,50 @@ public abstract class MixinComponentUse {
         if (held.isEmpty()) return;
 
         String heldClassName = held.getItem().getClass().getName();
+
+        // 1. Simple passthrough tools (let item handle the interaction)
         for (String toolClass : PASSTHROUGH_TOOL_CLASSES) {
             if (heldClassName.equals(toolClass)) {
-                // Return PASS so the tool's own use() logic can process the interaction
                 cir.setReturnValue(InteractionResult.PASS);
                 return;
             }
+        }
+
+        // 2. Linking Tool → delegate to FluxInteractionHelper for ILinkTE linking
+        if (heldClassName.equals(LINKING_TOOL_CLASS)) {
+            try {
+                ComponentTileEntity<?> self = (ComponentTileEntity<?>) (Object) this;
+                InteractionResult result = com.starmaylight.ex_additional_compat
+                        .capability.flux.FluxInteractionHelper
+                        .handleLinkingToolUse(self, player, hand, hit);
+                if (result != null) {
+                    cir.setReturnValue(result);
+                    return;
+                }
+            } catch (NoClassDefFoundError ignored) {
+                // Essentials/Crossroads not present - fallback to PASS
+            }
+            // If no flux trait found, still bypass GUI
+            cir.setReturnValue(InteractionResult.PASS);
+            return;
+        }
+
+        // 3. Chaos Container → delegate to ChaosInteractionHelper for chaos transfer
+        if (heldClassName.equals(CHAOS_CONTAINER_CLASS)) {
+            try {
+                ComponentTileEntity<?> self = (ComponentTileEntity<?>) (Object) this;
+                InteractionResult result = com.starmaylight.ex_additional_compat
+                        .capability.chaos.ChaosInteractionHelper
+                        .handleChaosContainerUse(self, player, hand);
+                if (result != null) {
+                    cir.setReturnValue(result);
+                    return;
+                }
+            } catch (NoClassDefFoundError ignored) {
+                // DraconicAdditions not present - fallback to PASS
+            }
+            // If no chaos trait found, let normal GUI open
+            return;
         }
     }
 }
